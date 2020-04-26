@@ -53,4 +53,4 @@ plt.show()
 ```
 
 This will plot the following:
-![cvexample](noteboos/cvexample.png)
+<img src="notebooks/cvexample.png" width="600">
