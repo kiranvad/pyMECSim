@@ -54,3 +54,6 @@ plt.show()
 
 This will plot the following:
 <img src="notebooks/cvexample.png" width="600">
+
+## Known issues
+* Function call for `MECSim` does not work from another folder. Try to run all the simulation with `pymecsim` at one level below like it is done in the `notbooks` folder. If you find a solution to this please submit a pull request.
