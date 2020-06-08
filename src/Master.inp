@@ -3,7 +3,7 @@
 0.50		! E_start (V)
 -0.50		! E_rev (V)
 1		! number of cycles
-1000		! scan speed (V/s)
+1e01		! scan speed (V/s)
 14		! 2^N points in time across n cycles (int)
 0		! correct vscan and freq for DigiPot/FFT (1 = yes, 0 for no)
 1		! output type: 0=E,i,t; 1=DigiPot compatible
@@ -45,5 +45,5 @@
 0.0e0		! a_2 term
 0.0e0		! a_3 term
 0.0e0		! a_4 term
-0, -1, 1, 1.0e0, 1.0e0, 0.0, 1.0e4, 0.50e0 ! type, reactions (nsp times): kf,kb, E0 (V),ksreal (cm/s), alpha for BV or lambda* for MH (1eV) (REPEAT FOR EACH REACTION)
+0, -1, 1, 1.0e0, 1.0e0, 0.25, 1.0e4, 0.50e0 ! type, reactions (nsp times): kf,kb, E0 (V),ksreal (cm/s), alpha for BV or lambda* for MH (1eV) (REPEAT FOR EACH REACTION)
 
