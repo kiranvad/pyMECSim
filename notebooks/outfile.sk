@@ -15,7 +15,7 @@
 10.0		! Dstar_min
 0.005e0	! max voltage step
 25.6e0	! time resolution experimentally to correct vscan/f (us)
-0		! show debug output files as well as MECSimOutput.txt (1=yes; 0=no)
+1		! show debug output files as well as MECSimOutput.txt (1=yes; 0=no)
 0		! use advanced voltage ramp (0 = E_start=E_end, 1 = use advanced ramp below, 2=From file "EInput.txt")
 2     	! number of E_rev lines for advanced ramp (if enter 0 then first E_rev value is the final time
 0.0		! E_start (V)
