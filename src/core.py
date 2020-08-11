@@ -35,8 +35,20 @@ class MECSIM:
             While the python wrapper provides access to many functions of MECSIM, it sometimes fails to understand the errors from MECSIM.
             Best practice is to always look at the log.txt file generated in your working directory and figure out what has gone wrong.
         """
-        self.configfile = configfile
         self.dirname = os.path.dirname(__file__)
+        self.exp = exp
+        self.configfile = configfile
+
+        if self.configfile is None:
+            inpfile = exp.get_inpfile_lines()
+            self.configfile = os.path.join(self.dirname, 'from_expt.inp')
+            with open(self.configfile, 'w') as f:
+                for item in inpfile:
+                    f.write(item)
+        elif self.exp is None:            
+            self.configfile = configfile
+        else:
+            raise RuntimeError('At least one input required. Use either a pymecsim exp class or a MECSIM .inp file')
         self.solve()
         self._get_errors()
         self.T,self.V,self.I = self._read_mecsim_out(self._get_filename('./'+self.outfile))

@@ -23,6 +23,33 @@ Dependencies will be checked and installed from the setup.py file.
 
 A sample usage is as follows:
 
+## Mode 1: Using pymecsim experiment interface
+```python
+from pymecsim import * 
+
+A = Specie('A', C0=1e-6)
+B = Specie('B')
+C = Specie('C')
+D = Specie('D')
+species = [A, B, C, D]
+
+R1 = ChargeTransfer({'A':1,'e':1},{'B':1},E0=0.0, ks=1.0e1)
+R2 = ChemicalReaction({'B':1,'C':1},{'A':1,'D':1}, kf=1e8, kb=1e-5)
+rxn = [R1, R2]
+
+mech = Mechanism(species, rxn)
+print(mech)
+
+cv = DCVoltammetry(E_start = 0.5, E_rev=-0.5, nu=1.0e0)
+volt = Voltammetry(objs=[cv])
+
+exp = Experiment(mech, voltammetry=volt)
+
+sim = MECSIM(exp=exp)
+sim.plot() # plot the simulated CV curve
+```
+
+## Mode 2: Using MECSim configuration file
 Import `pymecsim` using the following: 
 ```python
 from pymecsim import MECSIM, pysed
@@ -42,7 +69,7 @@ dirname = os.getcwd()
 for i,e0 in enumerate(E0):
     outfile = dirname + '/outfile.sk'
     pysed('$E0', str(e0), configfile, outfile)
-    model = MECSIM(outfile)
+    model = MECSIM(configfile=outfile)
     ax = model.plot(ax = ax)
     ax.set_label("E0 = "+str(e0))
 plt.legend([r'$E_0=0.5$',r'$E_0=0.1$',r'$E_0=1e-2$'],loc='lower right')
@@ -53,8 +80,6 @@ plt.show()
 This will plot the following:
 <img src="notebooks/cvexample.png" width="400">
 
-
-Naturally, you would want to be able to run simulations for different mechanisms and confgurations. You can do that by just defining a mechanism that MECSim can model(see examples for some possible reaction mechanisms [here](http://www.garethkennedy.net/MECSimScripts.html)).
 
 Once you have the mechanism file in say `/path/to/folder/mechanism.sk` format, turn it in as an input to pyMECSim using the following:
 ```python
@@ -67,7 +92,10 @@ One can also get concentration profiles by first indicating `MECSIM` to return c
 
 
 ## Notes
-Please free to contribute to this repository both interms of code and documetation or simple example use cases in jupyter notebook. Submit a pull request and I would be happy to integrate into this repository.
+* Please free to contribute to this repository both interms of code and documetation or simple example use cases in jupyter notebook. 
+Submit a pull request and I would be happy to integrate into this repository.
+
+* `api.md` contains the detailed API of pymecsim (under construction)
 
 
 
