@@ -6,7 +6,7 @@
 
 
  General parameters:
-      Temperature =   298.2000
+      Temperature =   298.0000
   Uncompensated R =        0.0
 
  Voltage ramp (V):
@@ -16,95 +16,107 @@
        Cycles =    1
   Total range =   2.0000
 
- Scan rate (V/s) =   1.00000000E+01
-  Final time (s) =   2.00000000E-01
+ Scan rate (V/s) =   1.00000000E+00
+  Final time (s) =   2.00000000E+00
 
 Found   1 AC signal(s). Max frequency =   0.0000 Hz
-          0.0000 mV at   180.0000 Hz
+          0.0000 mV at    18.0000 Hz
 
  No capacitor requested
 
+ Need to enter ghost reaction of the form
+     C +  1e = D       ; E0 =   0.922 , ks =   0.0000E+00 , alpha =  0.500
+ with E0=  0.92182831236606899     
 
- Found a total of   2 species
+ Found a total of   4 species
 
  No pre-equilibriation; use entered concentrations
 
  Summary of solution reactions:
      Charge transfer =  1
       1st Order Chem =  0
-      2nd Order Chem =  0
+      2nd Order Chem =  1
  Summary of surface confined reactions:
      Charge transfer =  0
       1st Order Chem =  0
       2nd Order Chem =  0
 
  Charge transfer reaction(s):
-     A +  1e = B       ; E0 =   0.250 , ks =   1.0000E+04 cm/s , alpha =   0.50
-                       ; K_eqm =   1.6794E+04
+     A +  1e = B       ; E0 =   0.000 , ks =   1.0000E+01 cm/s , alpha =   0.50
+                       ; K_eqm =   2.8576E+08
+ Chemical reaction(s):
+     B + C = A + D     ; kf,kb =   3.890000E+10  1.000000E-05 cm3/(mol.s)
+                       ; K_eqm =   3.8900E+15
 
  Electrode geometry:
    Planar with area =   1.00000000E+00 cm^2
 
  Technical details of simulation
    Using Butler-Volmer Theory
-   Points in time = 2^14 =    16384
-   delt =   1.2207E-05 and delE =   1.2207E-04
-    Exponential spatial grid with  57 points and delx(0) =   3.4939E-06
-   x =   1.7033E-06  5.3763E-06  9.4355E-06  1.3922E-05 |   9.4112E-03
+   Points in time = 2^12 =     4096
+   delt =   4.8828E-04 and delE =   4.8828E-04
+    Exponential spatial grid with 180 points and delx(0) =   5.0104E-11
+   x =   2.4426E-11  7.7099E-11  1.3531E-10  1.9965E-10 |   2.9755E-02
 
  Solution phase:
  Initial scaled concentrations and diffusion coeff (cm2/s)
  [A] =   1.00000000E-06 ; D =   1.00000000E-05
-           (1.00000000)
+           (0.09090909)
  [B] =   0.00000000E+00 ; D =   1.00000000E-05
            (0.00000000)
- Concentrations scaled by   1.00000000E-06 mol/cm3
-                            1.00000000E+00 mM
+ [C] =   1.00000000E-05 ; D =   1.00000000E-05
+           (0.90909091)
+ [D] =   0.00000000E+00 ; D =   1.00000000E-05
+           (0.00000000)
+ Concentrations scaled by   1.10000000E-05 mol/cm3
+                            1.10000000E+01 mM
 
 
  ************** Starting Time Loop ******************
 
- Done  10%; t,Eapp,i =   2.00E-02  3.00E-01 -7.11E-04,  C_err= -2.87E-12
-    0.8752    0.1248    0.0000    0.0000    0.0000    0.0000
- Done  20%; t,Eapp,i =   4.00E-02  1.00E-01 -1.47E-03,  C_err= -1.78E-12
-    0.0029    0.9971    0.0000    0.0000    0.0000    0.0000
- Done  30%; t,Eapp,i =   6.00E-02 -1.00E-01 -9.27E-04,  C_err= -1.26E-12
-    0.0000    1.0000    0.0000    0.0000    0.0000    0.0000
- Done  40%; t,Eapp,i =   8.00E-02 -3.00E-01 -7.36E-04,  C_err= -1.42E-12
-    0.0000    1.0000    0.0000    0.0000    0.0000    0.0000
- Done  50%; t,Eapp,i =   1.00E-01 -5.00E-01 -6.29E-04,  C_err= -1.62E-12
-    0.0000    1.0000    0.0000    0.0000    0.0000    0.0000
- Done  60%; t,Eapp,i =   1.20E-01 -3.00E-01 -5.59E-04,  C_err= -1.83E-12
-    0.0000    1.0000    0.0000    0.0000    0.0000    0.0000
- Done  70%; t,Eapp,i =   1.40E-01 -1.00E-01 -5.08E-04,  C_err= -2.06E-12
-    0.0000    1.0000    0.0000    0.0000    0.0000    0.0000
- Done  80%; t,Eapp,i =   1.60E-01  1.00E-01 -4.51E-04,  C_err= -3.06E-12
-    0.0029    0.9971    0.0000    0.0000    0.0000    0.0000
- Done  90%; t,Eapp,i =   1.80E-01  3.00E-01  2.10E-03,  C_err= -6.10E-13
-    0.8747    0.1253    0.0000    0.0000    0.0000    0.0000
- Done 100%; t,Eapp,i =   2.00E-01  5.00E-01  6.93E-04,  C_err= -2.34E-12
-    0.9999    0.0001    0.0000    0.0000    0.0000    0.0000
+ Done  10%; t,Eapp,i =   2.00E-01  3.00E-01 -1.58E-06,  C_err=  8.19E-09
+    0.0909    0.0000    0.9090    0.0001    0.0000    0.0000
+ Done  20%; t,Eapp,i =   4.00E-01  1.00E-01 -3.34E-03,  C_err=  9.19E-09
+    0.0891    0.0018    0.7448    0.1643    0.0000    0.0000
+ Done  30%; t,Eapp,i =   6.00E-01 -9.96E-02 -4.79E-03,  C_err=  1.19E-08
+    0.0019    0.0890    0.0000    0.9091    0.0000    0.0000
+ Done  40%; t,Eapp,i =   8.00E-01 -3.00E-01 -3.14E-03,  C_err=  1.28E-08
+    0.0000    0.0909    0.0000    0.9091    0.0000    0.0000
+ Done  50%; t,Eapp,i =   1.00E+00 -5.00E-01 -2.52E-03,  C_err=  1.54E-08
+    0.0000    0.0909    0.0000    0.9091    0.0000    0.0000
+ Done  60%; t,Eapp,i =   1.20E+00 -3.00E-01 -2.16E-03,  C_err=  1.75E-08
+    0.0000    0.0909    0.0000    0.9091    0.0000    0.0000
+ Done  70%; t,Eapp,i =   1.40E+00 -1.00E-01 -1.89E-03,  C_err=  1.78E-08
+    0.0018    0.0891    0.0000    0.9091    0.0000    0.0000
+ Done  80%; t,Eapp,i =   1.60E+00  9.96E-02 -6.28E-04,  C_err=  1.99E-08
+    0.0891    0.0018    0.0242    0.8849    0.0000    0.0000
+ Done  90%; t,Eapp,i =   1.80E+00  3.00E-01 -7.34E-07,  C_err=  2.08E-08
+    0.0909    0.0000    0.1878    0.7213    0.0000    0.0000
+ Done 100%; t,Eapp,i =   2.00E+00  5.00E-01 -3.62E-10,  C_err=  2.03E-08
+    0.0909    0.0000    0.2689    0.6402    0.0000    0.0000
 
  Concentration min/max values:
-    0.0000    0.0000    0.0000    0.0000    0.0000    0.0000
-    1.0000    1.0000    0.0000    0.0000    0.0000    0.0000
+    0.0000    0.0000   -0.0000    0.0000    0.0000    0.0000
+    0.0909    0.0909    0.9091    0.9091    0.0000    0.0000
 
  ****************************************************
 
- Current minimum =  -2.68622429E-03 and maximum =   2.24577576E-03
- Voltage minimum =   2.21557617E-01 and maximum =   2.78686523E-01
+ Current minimum =  -1.13560220E-02 and maximum =   0.00000000E+00
+ Voltage minimum =   4.49218750E-02 and maximum =   0.00000000E+00
 
    Average number of iterations at electrode surface =    1.000
- Average number of iterations for chemical reactions =    1.000
+ Average number of iterations for chemical reactions =    1.683
  Average ODE calculations for iterating surface conf =    0.000
   Average ODE calculations for bounding surface conf =    0.000
 
  Final scaled concentrations on spatial grid
- [A] =   9.99940454E-01  9.98716251E-01  9.96076410E-01 |   9.99998347E-01
- [B] =   5.95460837E-05  1.28374882E-03  3.92359046E-03 |   1.65337954E-06
+ [A] =   9.09090923E-02  9.09090923E-02  9.09090923E-02 |   9.09090909E-02
+ [B] =   3.18134265E-10  3.18133433E-10  3.18131638E-10 |   1.34485939E-23
+ [C] =   2.68896937E-01  2.68896937E-01  2.68896937E-01 |   9.09090386E-01
+ [D] =   6.40193990E-01  6.40193990E-01  6.40193990E-01 |   5.23150001E-07
 
  Error in concentration sum (=0 if D_A = D_B etc)
-        -2.34245956E-12 -2.34312569E-12 -2.34601227E-12 |   6.50146603E-13
+         2.03333324E-08  2.03333321E-08  2.03333319E-08 |   1.64535052E-13
 
 
  Output file written to MECSimOutput_Pot.txt

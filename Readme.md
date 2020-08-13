@@ -21,7 +21,14 @@ pip install git+https://github.com/kiranvad/pyMECSim#egg=pyMECSIM.`
 ```
 Dependencies will be checked and installed from the setup.py file.
 
-A sample usage is as follows:
+To install the package locally:
+```bash
+git clone https://github.com/kiranvad/pyMECSim.git
+cd pyMECSim
+pip install -e .
+
+```
+There are two modes of usages:
 
 ## Mode 1: Using pymecsim experiment interface
 ```python
@@ -50,6 +57,7 @@ sim.plot() # plot the simulated CV curve
 ```
 
 ## Mode 2: Using MECSim configuration file
+If you are familiar with original MECSim software and its configuaraton files (.inp), you can also pass it as an input.
 Import `pymecsim` using the following: 
 ```python
 from pymecsim import MECSIM, pysed
@@ -73,7 +81,6 @@ for i,e0 in enumerate(E0):
     ax = model.plot(ax = ax)
     ax.set_label("E0 = "+str(e0))
 plt.legend([r'$E_0=0.5$',r'$E_0=0.1$',r'$E_0=1e-2$'],loc='lower right')
-#plt.savefig('cvexample.png',dpi=500,bbox_inches='tight')
 plt.show()
 ```
 
@@ -81,14 +88,10 @@ This will plot the following:
 <img src="notebooks/cvexample.png" width="400">
 
 
-Once you have the mechanism file in say `/path/to/folder/mechanism.sk` format, turn it in as an input to pyMECSim using the following:
-```python
-model = MECSIM('/path/to/folder/mechanism.sk')
-model.plot()
-plt.show()
-```
-
-One can also get concentration profiles by first indicating `MECSIM` to return concentration profiles in the configuration file by setting `1		! show debug output files as well as MECSimOutput.txt (1=yes; 0=no)`. `pymecsim` will then be able to return concentration profiles as numpy arrays. see `notebooks/Cyclic Voltammetry Simulation Example for Single Electron Transfer Mechanism.ipynb` for an example use case.
+## Notebooks
+This repository is shipped few useful [notebooks](https://github.com/kiranvad/pyMECSim/tree/master/notebooks).
+* [Cyclic Voltammetry Simulation Example for Single Electron Transfer Mechanism](https://github.com/kiranvad/pyMECSim/blob/master/notebooks/Cyclic%20Voltammetry%20Simulation%20Example%20for%20Single%20Electron%20Transfer%20Mechanism.ipynb) -- that examplains all the possible use case of the simulator on a simple one electron transfer mehcanism
+* [Kinetic Zone Diagram](https://github.com/kiranvad/pyMECSim/blob/master/notebooks/Kinetic%20Zone%20%Diagram.ipynb) -- exmaple explaining how to generate various CV curves in the [kinetic zone diagram](https://www.nature.com/articles/s41570-017-0039/figures/2)
 
 
 ## Notes

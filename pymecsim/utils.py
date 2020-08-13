@@ -1,4 +1,5 @@
 import re
+import pdb
 
 def pysed(oldstr, newstr, infile, outfile):
     """
@@ -27,7 +28,7 @@ def pysed(oldstr, newstr, infile, outfile):
     linelist = []
     with open(infile) as f:
         for line in f:
-            if oldstr in line:
+            if oldstr in line.split('!')[0]:
                 newline = line.replace(oldstr, newstr)
                 linelist.append(newline)
             else:

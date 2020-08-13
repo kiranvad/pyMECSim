@@ -13,8 +13,10 @@ import matplotlib.pyplot as plt
 from matplotlib import rc
 rc('text', usetex=True)
 
+from .utils import pysed
+
 class MECSIM:
-    def __init__(self, configfile):
+    def __init__(self, configfile=None, exp=None):
         """
         Simulate a voltammetry response for a given configuration.
         
@@ -49,14 +51,10 @@ class MECSIM:
             self.configfile = configfile
         else:
             raise RuntimeError('At least one input required. Use either a pymecsim exp class or a MECSIM .inp file')
-        self.solve()
-        self._get_errors()
-        self.T,self.V,self.I = self._read_mecsim_out(self._get_filename('./'+self.outfile))
-        
+            
     def solve(self):
         main_configfile = os.path.join(self.dirname, 'Master.inp')
         copyfile(self.configfile, main_configfile)
-
         args = shlex.split('chmod u+x ./MECSim')
         process = subprocess.Popen(args,stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=dirname)
         args = shlex.split('./MECSim')
@@ -75,7 +73,11 @@ class MECSIM:
 
             elif 'Additional files' in line:
                 self.flag_concs= True
-                
+        self._get_errors()
+        self.T,self.V,self.I = self._read_mecsim_out(self._get_filename('./'+self.outfile))  
+        
+        return self.T, self.V , self.I
+        
     def _get_errors(self):
         for line in reversed(self.logs):
             if "Error" in line:
@@ -216,3 +218,15 @@ class MECSIM:
         df = df.applymap(to_float)
 
         return df.to_numpy()
+    
+    def set_parameter(self,string, value):
+        """
+        Utility function to set a parameter value when using Experiment class as input
+        """
+        value = '{:.2E}'.format(value).replace('E','e')
+        pysed(string,value, self.configfile, self.configfile)
+        
+        
+        
+        
+        

@@ -1,4 +1,5 @@
 import pdb
+import warnings
 
 def process_parameter(param):
     if isinstance(param, str):
@@ -80,6 +81,12 @@ class Reaction:
         self.num_species = len(self.reactants) + len(self.products)
     
     def __repr__(self):
+        reaction = self._get_formula()  
+        reaction += self.params
+        
+        return reaction
+    
+    def _get_formula(self):
         lhs = ['{} {}'.format(value, key) for key, value in self.reactants.items()]
         rhs = ['{} {}'.format(value, key) for key, value in self.products.items()]
         
@@ -97,10 +104,9 @@ class Reaction:
                 reaction += s + ' + '
             else:
                 reaction += s 
-                
-        reaction += self.params
         
         return reaction
+               
     
 class ChargeTransfer(Reaction):
     """
@@ -111,6 +117,10 @@ class ChargeTransfer(Reaction):
     """
     def __init__(self, reactants, products, E0, ks=1e4, alpha=0.5):
         self.ks = ks
+        if isinstance(self.ks, float):
+            if self.ks>1e14:
+                warnings.warn('reaction rate {:.2E} may be too high'.format(self.ks))
+                
         self.E0 = E0
         self.alpha = alpha
         self.mode = ['Charge Transfer', 0]
@@ -134,15 +144,22 @@ class ChemicalReaction(Reaction):
     """
     def __init__(self, reactants, products, kf=1e4, kb=1e4):
         self.kf = kf
+        if isinstance(self.kf, float):
+            if self.kf>1e14:
+                warnings.warn('reaction rate {:.2E} may be too high'.format(self.kf))
+                
         self.kb = kb
+        if isinstance(self.kb, float):
+            if self.kb>1e14:
+                warnings.warn('reaction rate {:.2E} may be too high'.format(self.kb))
         self.mode = ['Chemical Reaction', 2]
         self.params = self.get_params_as_string()
         super().__init__(reactants, products)
 
      
     def get_params_as_string(self):
-        params = '  kf= {:.2E}, '.format(self.kf)
-        params += 'kb= {:.2E} '.format(self.kb)
+        params = '  kf= {}, '.format(process_parameter(self.kf))
+        params += 'kb= {} '.format(process_parameter(self.kb))
         
         return params    
 
@@ -155,7 +172,15 @@ class CatalyticReaction(Reaction):
     """
     def __init__(self, reactants, products, kf=1e4, kb=1e4):
         self.kf = kf
+        if isinstance(self.kf, float):
+            if self.kf>1e14:
+                warnings.warn('reaction rate {:.2E} may be too high'.format(self.kf))
+                
         self.kb = kb
+        if isinstance(self.kb, float):
+            if self.kb>1e14:
+                warnings.warn('reaction rate {:.2E} may be too high'.format(self.kb))
+                
         self.mode = ['Catalytic Reaction', 1]
         self.params = self.get_params_as_string()
         super().__init__(reactants, products)
@@ -188,6 +213,9 @@ class Mechanism:
     def __init__(self, species, reactions):
         self.species = species
         self.reactions = reactions
+        self._check_species_reactions()
+        self._check_surface_reaction()
+            
         self.num_species = len(species)
         self.specie_list = [s.name for s in species]   
         self.input = self.get_input()
@@ -214,7 +242,7 @@ class Mechanism:
             line += '{}, '.format(process_parameter(reaction.E0))
             line += '{}, '.format(process_parameter(reaction.ks))
             line += '{}\t!'.format(process_parameter(reaction.alpha))
-            line += reaction.__repr__()+'\n'
+            line += reaction._get_formula()+'\n'
             return line
         
         else:
@@ -230,7 +258,7 @@ class Mechanism:
             line += '{}, '.format(process_parameter(reaction.kf))
             line += '{}, '.format(process_parameter(reaction.kb))
             line += '0.0e0, 0.0e0, 0.50\t!'
-            line += reaction.__repr__()+'\n'
+            line += reaction._get_formula()+'\n'
             return line
         
     def __repr__(self):
@@ -248,6 +276,39 @@ class Mechanism:
         
         return lines
     
+    def _check_species_reactions(self):
+        species_names = set([s.name for s in self.species])
+        species_in_reactions = []
+        for rxn in self.reactions:
+            for r in rxn.reactants:
+                species_in_reactions.append(r)
+            for p in rxn.products:
+                species_in_reactions.append(p) 
+        
+        species_in_reactions = set(species_in_reactions)
+        species_in_reactions.remove('e')
+        if not species_names==species_in_reactions:
+            raise Exception('species in reactions and the list of Species provided did not match')
+     
+    def _check_surface_reaction(self):
+        
+        for rxn in self.reactions:
+            nr = 0
+            for r in rxn.reactants:
+                for s in self.species:
+                    if r==s.name and s._specie_type==1:
+                        nr += 1
+            np = 0
+            for p in rxn.products:
+                for s in self.species:
+                    if p==s.name and s._specie_type==1:
+                        np += 1
+            if np!=nr:
+                message = 'Surface confined species on both sides of the reactions are not for '
+                message += rxn._get_formula()
+                raise Exception(message)
+            
+        
 from shutil import copy
 import os
 
@@ -272,19 +333,8 @@ class Voltammetry:
         self.set_defaults()
         self.objs = objs
         self.ramp = 0
-        if self.objs is not None:
-            for obj in self.objs:
-                if isinstance(obj, str):
-                    self.from_file(obj)
-                    self.ramp = 2
-                elif obj.type=='DC':
-                    self.dcvolt_params.update(obj.params)
-                    self.ramp = 0
-                elif obj.type=='AC':
-                    self.acvolt_params.update(obj.params)
-                    self.ramp = 0
-                else:
-                    raise KeyError('Did not understand type {}'.type(obj))
+        self._check_objs()
+
     
     def from_file(self):
         dirname = os.path.dirname(__file__)
@@ -326,6 +376,34 @@ class Voltammetry:
                                   process_parameter(self.acvolt_params['frequency'] )))
         
         return lines
+    
+    def _check_objs(self):
+        self.obj_mode = []
+        if self.objs is None:
+            msg = 'using the default DC Voltammetry loading: \n'
+            msg += '{}'.format(self.dcvolt_params)
+            warnings.warn(msg)
+        else:
+            for obj in self.objs:
+                if isinstance(obj, str):
+                    self.from_file(obj)
+                    self.ramp = 2
+                elif obj.type=='DC':
+                    self.dcvolt_params.update(obj.params)
+                    self.ramp = 0
+                    self.obj_mode.append('DC')
+                elif obj.type=='AC':
+                    self.acvolt_params.update(obj.params)
+                    self.ramp = 0
+                    if 'DC' not in self.obj_mode:
+                        msg = 'DC voltammetry is not specied using default loadings in : \n'
+                        msg += '{}'.format(self.dcvolt_params)
+                        warnings.warn(msg)
+                        
+                    self.obj_mode.append('AC')
+                    
+                else:
+                    raise KeyError('Did not understand type {}'.type(obj))
                     
 class DCVoltammetry:
     """
