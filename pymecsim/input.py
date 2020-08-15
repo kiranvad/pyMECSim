@@ -129,9 +129,9 @@ class ChargeTransfer(Reaction):
 
      
     def get_params_as_string(self):
-        params = '  ks= {:.2E}, '.format(self.ks)
-        params += 'E0 = {:.2E}, '.format(self.E0)
-        params += 'alpha = {:.2f}'.format(self.alpha)
+        params = '  ks= {}, '.format(process_parameter(self.ks))
+        params += 'E0 = {}, '.format(process_parameter(self.E0))
+        params += 'alpha = {}'.format(process_parameter(self.alpha))
         
         return params
 
@@ -187,8 +187,8 @@ class CatalyticReaction(Reaction):
 
      
     def get_params_as_string(self):
-        params = '  kf= {:.2E}, '.format(self.kf)
-        params += 'kb= {:.2E} '.format(self.kb)
+        params = '  kf= {}, '.format(process_parameter(self.kf))
+        params += 'kb= {} '.format(process_parameter(self.kb))
         
         return params 
            
@@ -329,13 +329,16 @@ class Voltammetry:
     (This function has not been tested)
     
     """
-    def __init__(self, objs=None):
+    def __init__(self, objs=None, N=12):
+        """
+        N : Number of spatial points as a power of two
+        """
+        self.N = N
         self.set_defaults()
         self.objs = objs
         self.ramp = 0
         self._check_objs()
 
-    
     def from_file(self):
         dirname = os.path.dirname(__file__)
         fname = os.path.join(dirname, 'Einput.txt')
@@ -350,7 +353,7 @@ class Voltammetry:
         for key, value in self.dcvolt_params.items():
             lines.append('{}\t!{}\n'.format(process_parameter(value), key))
             
-        lines.append('12\t!points in time across n cycle \n') 
+        lines.append('{}\t!points in time across n cycle \n'.format(process_parameter(self.N))) 
         lines.append('0\t! correct vscan and freq for DigiPot/FFT \n')
         lines.append('1\t! output type: 0=E,i,t; 1=DigiPot compatible \n')
         lines.append('0\t! EC type: 0 = Butler-Volmer, 1 = Marcus theory \n')

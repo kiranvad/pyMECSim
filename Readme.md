@@ -91,7 +91,7 @@ This will plot the following:
 ## Notebooks
 This repository is shipped few useful [notebooks](https://github.com/kiranvad/pyMECSim/tree/master/notebooks).
 * [Cyclic Voltammetry Simulation Example for Single Electron Transfer Mechanism](https://github.com/kiranvad/pyMECSim/blob/master/notebooks/Cyclic%20Voltammetry%20Simulation%20Example%20for%20Single%20Electron%20Transfer%20Mechanism.ipynb) -- that examplains all the possible use case of the simulator on a simple one electron transfer mehcanism
-* [Kinetic Zone Diagram](https://github.com/kiranvad/pyMECSim/blob/master/notebooks/Kinetic%20Zone%20%Diagram.ipynb) -- exmaple explaining how to generate various CV curves in the [kinetic zone diagram](https://www.nature.com/articles/s41570-017-0039/figures/2)
+* [Kinetic Zone Diagram](/notebooks/Kinetic%20Zone%20Diagram.ipynb) -- exmaple explaining how to generate various CV curves in the [kinetic zone diagram](https://www.nature.com/articles/s41570-017-0039/figures/2)
 
 
 ## Notes
