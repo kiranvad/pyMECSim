@@ -1,7 +1,7 @@
 2.98e+02	!T
 0.00e+00	!Rh
-5.10e-01	!E_start
--5.10e-01	!E_rev
+5.20e-01	!E_start
+-5.20e-01	!E_rev
 1	!num_cycles
 7.50e-02	!scan_rate
 15	!points in time across n cycle 
@@ -36,8 +36,8 @@
 1	! number of AC sources to add (keep 1 with zero amplitude if want DC only) 
 0.00e+00, 1.80e+01	! AC sin wave: amp (mV), freq(Hz) (REPEAT) 
 3	! Number of species 
-1.00e-06, 1.00e-03, 0 ! Cu2O 
 0.00e+00, 0.00e+00, 0 ! Cu 
+1.00e-06, 1.00e-03, 0 ! Cu2O 
 1.00e-06, 1.00e-02, 0 ! CuO2-- 
 3 ! Number of terms
 0 ! E_pzc (V)
@@ -45,5 +45,7 @@
 0 ! a_1
 0 ! a_2
 0 ! a_3
-0, -1, 1, 0, 0.0e0, 0.0e0, -5.50e-01, 1.00e-01, 5.00e-01	!Charge Transfer : 1 Cu2O + 1 e <=> 1 Cu
-0, 1, 0, -1, 0.0e0, 0.0e0, -1.20e-01, 1.00e+05, 5.00e-01	!Charge Transfer : 1 CuO2-- + 1 e <=> 1 Cu2O
+0, 1, -1, 0, 0.0e0, 0.0e0, -5.50e-01, 1.00e-04, 5.00e-01	!Charge Transfer : 1 Cu2O + 1 e <=> 1 Cu
+0, 0, 1, -1, 0.0e0, 0.0e0, -1.20e-01, 1.00e-04, 5.00e-01	!Charge Transfer : 1 CuO2-- + 1 e <=> 1 Cu2O
+
+
