@@ -1,3 +1,13 @@
+"""
+Change logs
+-----------
+Version 2 :
+    1. reactions now requires input to be list of tuples with (species, coefficent)
+    2. mechanism requires only list of inputs
+
+"""
+
+
 import pdb
 import warnings
 import itertools

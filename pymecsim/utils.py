@@ -1,3 +1,10 @@
+"""Change logs
+
+Version 2:
+----------
+1. Add depreceated function as a utility
+"""
+
 import re
 import pdb
 
