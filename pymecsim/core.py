@@ -140,10 +140,10 @@ class MECSIM:
         """
         returns bulk concentrations C(x,t=t_end).
         
-        output is a numpy array of shape (N,P) where N is number of grid points in x-direction and P is number of species
+        output is dictonaty with keys as species names. Access the normalized length using key 'x'
         """
         if not self.flag_concs:
-            raise KeyError('MECSIM did not output any concentration profiles.'+
+            raise Exception('MECSIM did not output any concentration profiles.'+
                            'Did you specifiy in the configuration file to output the concentration profiles?')
         
         fin_file = self._get_filename('EC_Model.fin')
@@ -154,17 +154,22 @@ class MECSIM:
             concs.append(columns)
         concs = np.asarray(concs) 
         concs = self._get_float_matrix(concs)
-
-        return concs
+        
+        out = {}
+        out['x'] = concs[:,0]
+        for i,s in enumerate(self.exp.mechanism.species):
+            out[s.name] = concs[:,i+1]
+            
+        return out
     
     def get_surface_concentrations(self):
         """
         returns surface concentrations profiles over time C(x=0,t).
         
-        output is a numpy array of shape (N,P) where N is number of time points and P is number of species
+        output is dictonaty with keys as species names. Access the time array over t using key 'T'
         """
         if not self.flag_concs:
-            raise KeyError('MECSIM did not output any concentration profiles.'+
+            raise Exception('MECSIM did not output any concentration profiles.'+
                        'Did you specifiy in the configuration file to output the concentration profiles?')
         tcv_file = self._get_filename('EC_Model.tvc')    
         f = open(tcv_file, 'r')
@@ -175,8 +180,12 @@ class MECSIM:
                 concs.append(columns[3:])
         concs = np.asarray(concs) 
         concs = self._get_float_matrix(concs)   
-
-        return concs
+        out = {}
+        out['T'] = self.T
+        for i, s in enumerate(self.exp.mechanism.species):
+            out[s.name] = concs[1:,i]
+            
+        return out
     
     def plot(self,ax = None):
         """ simple visualization tool for CV curve """

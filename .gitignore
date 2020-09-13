@@ -133,3 +133,5 @@ data/
 figures/
 *.inp
 *.txt
+*.fin
+*.tvc
