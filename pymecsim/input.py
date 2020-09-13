@@ -1,5 +1,18 @@
+"""
+Change logs
+-----------
+Version 2 :
+    1. reactions now requires input to be list of tuples with (species, coefficent)
+    2. mechanism requires only list of inputs
+
+"""
+
+
 import pdb
 import warnings
+import itertools
+
+from .utils import deprecated
 
 def process_parameter(param):
     if isinstance(param, str):
@@ -47,8 +60,8 @@ class Specie:
             self._specie_type = 0
     
     def __repr__(self):
-        line = '{} specie with Diffusion coefficent {:.2E} {} , intial concentration {:.2E} {}'
-        return line.format(self.specie_type, self.D, self.D_units, self.C0, self.C_units)
+        line = '{} specie {} with Diffusion coefficent {:.2E} {} , intial concentration {:.2E} {}'
+        return line.format(self.specie_type, self.name, self.D, self.D_units, self.C0, self.C_units)
         
     def get_input(self):
         _D = process_parameter(self.D)    
@@ -76,9 +89,18 @@ class Capacitance:
     
 class Reaction:
     def __init__(self, reactants, products):
+        """
+        Main reaction base class that takes list of tuples in reactants and products and produces a pymecsim reaction.
+        Each tuple is (specie, coefficient) in the reaction. where species needs to be `pymecsim::Specie` type.
+        
+        _get_formula : produces the reaction as a formula and returns string
+        _to_dict : converts the reactants/products from tuple to dict 
+        """
         self.reactants = reactants
         self.products = products
-        self.num_species = len(self.reactants) + len(self.products)
+        self.reactants_dict = self._to_dict(self.reactants)
+        self.products_dict = self._to_dict(self.products)
+        self.num_species = len(self.reactants_dict) + len(self.products_dict)
     
     def __repr__(self):
         reaction = self._get_formula()  
@@ -87,8 +109,8 @@ class Reaction:
         return reaction
     
     def _get_formula(self):
-        lhs = ['{} {}'.format(value, key) for key, value in self.reactants.items()]
-        rhs = ['{} {}'.format(value, key) for key, value in self.products.items()]
+        lhs = ['{} {}'.format(value, key) for key, value in self.reactants_dict.items()]
+        rhs = ['{} {}'.format(value, key) for key, value in self.products_dict.items()]
         
         reaction =self.mode[0] +' : '
         for i, s in enumerate(lhs):
@@ -106,12 +128,27 @@ class Reaction:
                 reaction += s 
         
         return reaction
+    
+    def _to_dict(self, x):
+        d = {}
+        for specie, coeff in x:
+            if specie=='e':
+                d[specie] = coeff
+            else:
+                d[specie.name] = coeff
+            
+        return d
+     
                
     
 class ChargeTransfer(Reaction):
     """
+    A subtype of `pymecsim::Reaction` class for charge transfer reactions.
+    In this rections, one needs to use electron as a specie with a number of electrons transfered as coefficient.
+    To represent electron as a tuple to be used in `Reaction` use the tuple: ('e',n) where n is number of electron transfered.
+    
     Usage:
-    >>> R1 = ChargeTransfer({'A':1,'e':2},{'B':1},0.0)
+    >>> R1 = ChargeTransfer([(A,1),('e',2)],[(B, 1)],0.0)
     >>> print(R1) 
     Charge Transfer : 1 A + 2 e <=> 1 B  ks= 1.00E+04, E0 = 0.00E+00, alpha = 0.50
     """
@@ -127,7 +164,6 @@ class ChargeTransfer(Reaction):
         self.params = self.get_params_as_string()
         super().__init__(reactants, products)
 
-     
     def get_params_as_string(self):
         params = '  ks= {}, '.format(process_parameter(self.ks))
         params += 'E0 = {}, '.format(process_parameter(self.E0))
@@ -137,8 +173,10 @@ class ChargeTransfer(Reaction):
 
 class ChemicalReaction(Reaction):
     """
+    A subtype of `pymecsim::Reaction` class for chemical reactions.
     usage:
-    >>> R2 = ChemicalReaction({'A':1,'B':1},{'C':1,'D':1})
+    >>> R2 = ChemicalReaction({'A':1,'B':1},{'C':1,'D':1}) (depreceated)
+    >>> R2 = ChemicalReaction([(A,1),(B,1)],[(C,1),(D,1)])
     >>> print(R2)
     Chemical Reaction : 1 A + 1 B <=> 1 C + 1 D  kf= 1.00E+04, kb= 1.00E+04  
     """
@@ -165,8 +203,10 @@ class ChemicalReaction(Reaction):
 
 class CatalyticReaction(Reaction):
     """
+    A subtype of `pymecsim::Reaction` class for chemical reactions.
     Usage:
-    >>> R3 = CatalyticReaction({'B':1},{'C':1})
+    >>> R3 = CatalyticReaction({'B':1},{'C':1}) (depreceated)
+    >>> R3 = CatalyticReaction([(B,1)],[(C,1)])
     >>> print(R3)
     Catalytic Reaction : 1 B <=> 1 C  kf= 1.00E+04, kb= 1.00E+04 
     """
@@ -194,6 +234,7 @@ class CatalyticReaction(Reaction):
            
 class Mechanism:
     """
+    A mechanism class that can be created by passing a list of `pymecsim::Reaction` class objects
     Usage:
     >>> A = Specie('A', C0=1e-6)
     >>> B = Specie('B')
@@ -201,23 +242,25 @@ class Mechanism:
     >>> D = Specie('D')
     >>> species = [A, B, C, D]
 
-    >>> R1 = ChargeTransfer({'A':1,'e':1},{'B':1},0.0)
-    >>> R2 = ChemicalReaction({'B':1,'C':1},{'A':1,'D':1})
+    >>> R1 = ChargeTransfer({'A':1,'e':1},{'B':1},0.0) (depreceated)
+    >>> R1 = ChargeTransfer([(A, 1), ('e', 1)],[(B, 1)],0.0) 
+    
+    >>> R2 = ChemicalReaction({'B':1,'C':1},{'A':1,'D':1}) (depreceated)
+    >>> R2 = ChemicalReaction([(B, 1),(C,1)],[(A, 1),(D, 1)])    
     >>> rxn = [R1, R2]
-    >>> mech = Mechanism(species, rxn)
+    >>> mech = Mechanism(rxn)
     >>> print(mech)  
 
     Charge Transfer : 1 A + 1 e <=> 1 B  ks= 1.00E+04, E0 = 0.00E+00, alpha = 0.50
     Chemical Reaction : 1 B + 1 C <=> 1 A + 1 D  kf= 1.00E+04, kb= 1.00E+04
     """
-    def __init__(self, species, reactions):
-        self.species = species
+    def __init__(self, reactions):
         self.reactions = reactions
-        self._check_species_reactions()
+        self.species = self._get_species_from_reactions()
         self._check_surface_reaction()
             
-        self.num_species = len(species)
-        self.specie_list = [s.name for s in species]   
+        self.num_species = len(self.species)
+        self.specie_list = [s.name for s in self.species]   
         self.input = self.get_input()
 
     def get_reaction_dict(self):
@@ -231,10 +274,10 @@ class Mechanism:
         if reaction.mode[1]==0:
             line = '{}, '.format(process_parameter(reaction.mode[1]))
             reaction_input_dict = self.get_reaction_dict()
-            for key, coeff in reaction.reactants.items():
+            for key, coeff in reaction.reactants_dict.items():
                 reaction_input_dict[key]= '-{}'.format(process_parameter(coeff))
-            for key, coeff in reaction.products.items():
-                reaction_input_dict[key]='{}'.format(process_parameter(reaction.reactants['e'])) 
+            for key, coeff in reaction.products_dict.items():
+                reaction_input_dict[key]='{}'.format(process_parameter(coeff)) 
             del reaction_input_dict['e']
             
             line += ', '.join(process_parameter(value) for key, value in reaction_input_dict.items() )
@@ -248,9 +291,9 @@ class Mechanism:
         else:
             line = '{}, '.format(process_parameter(reaction.mode[1]))
             reaction_input_dict = self.get_reaction_dict()
-            for key, coeff in reaction.reactants.items():
+            for key, coeff in reaction.reactants_dict.items():
                 reaction_input_dict[key]= '-{}'.format(process_parameter(coeff))
-            for key, coeff in reaction.products.items():
+            for key, coeff in reaction.products_dict.items():
                 reaction_input_dict[key]= '{}'.format(process_parameter(coeff))
                 
             line += ', '.join(process_parameter(value) for key, value in reaction_input_dict.items() )
@@ -276,6 +319,7 @@ class Mechanism:
         
         return lines
     
+    @deprecated
     def _check_species_reactions(self):
         species_names = set([s.name for s in self.species])
         species_in_reactions = []
@@ -284,7 +328,7 @@ class Mechanism:
                 species_in_reactions.append(r)
             for p in rxn.products:
                 species_in_reactions.append(p) 
-        
+        pdb.set_trace()
         species_in_reactions = set(species_in_reactions)
         species_in_reactions.remove('e')
         if not species_names==species_in_reactions:
@@ -304,9 +348,29 @@ class Mechanism:
                     if p==s.name and s._specie_type==1:
                         np += 1
             if np!=nr:
-                message = 'Surface confined species on both sides of the reactions are not for '
+                message = 'Number of surface confined species on both sides of \
+                the reactions needs to be same for ' 
                 message += rxn._get_formula()
+                
                 raise Exception(message)
+                
+    def _get_species_from_reactions(self):
+        solution_species = []
+        surface_species = []
+        for reaction in self.reactions:
+            for side in [reaction.reactants, reaction.products]:
+                for specie,_ in side:
+                    if not specie=='e':
+                        if specie._specie_type==0:
+                            if specie not in solution_species:
+                                solution_species.append(specie)
+                        elif specie._specie_type==1:
+                            if specie not in surface_species:
+                                surface_species.append(specie)
+                        
+        species = list(itertools.chain(solution_species, surface_species))
+        
+        return species
             
         
 from shutil import copy
