@@ -51,7 +51,8 @@ class MECSIM:
             self.configfile = configfile
         else:
             raise RuntimeError('At least one input required. Use either a pymecsim exp class or a MECSIM .inp file')
-            
+        
+
     def solve(self):
         main_configfile = os.path.join(self.dirname, 'Master.inp')
         copyfile(self.configfile, main_configfile)
@@ -75,6 +76,12 @@ class MECSIM:
                 self.flag_concs= True
         self._get_errors()
         self.T,self.V,self.I = self._read_mecsim_out(self._get_filename('./'+self.outfile))  
+        
+        if self.flag_concs:
+            _file = self._get_filename('EC_Model.fin')
+            self.fin_file = list(open(_file, 'r'))
+            _file = self._get_filename('EC_Model.tvc')
+            self.tvc_file = list(open(_file, 'r'))
         
         return self.T, self.V , self.I
         
@@ -146,19 +153,16 @@ class MECSIM:
             raise Exception('MECSIM did not output any concentration profiles.'+
                            'Did you specifiy in the configuration file to output the concentration profiles?')
         
-        fin_file = self._get_filename('EC_Model.fin')
-        f = open(fin_file, 'r')
         concs = []
-        for i, line in enumerate(f):
+        for i, line in enumerate(self.fin_file):
             columns = line.split()
             concs.append(columns)
         concs = np.asarray(concs) 
         concs = self._get_float_matrix(concs)
-        
         out = {}
-        out['x'] = concs[:,0]
+        out['x'] = concs[1:,0]
         for i,s in enumerate(self.exp.mechanism.species):
-            out[s.name] = concs[:,i+1]
+            out[s.name] = concs[1:,i+1]
             
         return out
     
@@ -167,23 +171,33 @@ class MECSIM:
         returns surface concentrations profiles over time C(x=0,t).
         
         output is dictonaty with keys as species names. Access the time array over t using key 'T'
+        
+        Notes:
+        ------
+                EC_Model.tvc is structured such that first line is number of species
+                next few lines can be trerated as a table with columns ordered as time, voltage,unkown, concentrations
         """
         if not self.flag_concs:
             raise Exception('MECSIM did not output any concentration profiles.'+
                        'Did you specifiy in the configuration file to output the concentration profiles?')
-        tcv_file = self._get_filename('EC_Model.tvc')    
-        f = open(tcv_file, 'r')
-        concs = []
-        for i, line in enumerate(f):
+        
+        table = []
+        for i, line in enumerate(self.tvc_file):
             if i>0:
                 columns = line.split()
-                concs.append(columns[3:])
-        concs = np.asarray(concs) 
-        concs = self._get_float_matrix(concs)   
+                table.append(columns)
+        table = np.asarray(table) 
+        table = self._get_float_matrix(table)
+        
+        # only collect rows with a positive time stamp
+        positive_time = table[:,0]>0
+        table = table[positive_time,:]
+        
         out = {}
-        out['T'] = self.T
+        out['T'] = table[:,0]
+        concs = table[:,3:]
         for i, s in enumerate(self.exp.mechanism.species):
-            out[s.name] = concs[1:,i]
+            out[s.name] = concs[:,i]
             
         return out
     

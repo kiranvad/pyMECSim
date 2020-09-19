@@ -35,7 +35,8 @@ def pysed(oldstr, newstr, infile, outfile):
     linelist = []
     with open(infile) as f:
         for line in f:
-            if oldstr in line.split('!')[0]:
+            items = line.split('!')[0].split(',')
+            if oldstr in [x.replace(" ","") for x in items]:
                 newline = line.replace(oldstr, newstr)
                 linelist.append(newline)
             else:
