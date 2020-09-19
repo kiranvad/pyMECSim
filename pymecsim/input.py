@@ -421,7 +421,7 @@ class Voltammetry:
         lines.append('0\t! correct vscan and freq for DigiPot/FFT \n')
         lines.append('1\t! output type: 0=E,i,t; 1=DigiPot compatible \n')
         lines.append('0\t! EC type: 0 = Butler-Volmer, 1 = Marcus theory \n')
-        lines.append('0\t! Pre-equilibrium switch: 0=stay with user entered, 1 = apply Pre-eqm operation \n')
+        lines.append('1\t! Pre-equilibrium switch: 0=stay with user entered, 1 = apply Pre-eqm operation \n')
         lines.append('0\t! fix number of timesteps (1 = yes; 0 = no) \n')
         lines.append('4000\t! Use a fixed number of timesteps rather than 2^N \n')
         lines.append('0.10\t! beta \n')

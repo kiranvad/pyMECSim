@@ -15,7 +15,7 @@ If you use this software in your work please cite the original MECSim software a
     url          = {https://github.com/kiranvad/pyMECSim}
     }
 ```
-To install as a package, run 
+To install as a package, run
 ```bash
 pip install git+https://github.com/kiranvad/pyMECSim#egg=pyMECSIM.` 
 ```
@@ -40,11 +40,12 @@ C = Specie('C')
 D = Specie('D')
 species = [A, B, C, D]
 
-R1 = ChargeTransfer({'A':1,'e':1},{'B':1},E0=0.0, ks=1.0e1)
-R2 = ChemicalReaction({'B':1,'C':1},{'A':1,'D':1}, kf=1e8, kb=1e-5)
+R1 = ChargeTransfer([(A,1),('e',1)],[(B,1)],E0=0.0, ks=1.0e1)
+R2 = ChemicalReaction([(B,1),(C,1)],[(A,1),(D,1)], kf=1e8, kb=1e-5)
+
 rxn = [R1, R2]
 
-mech = Mechanism(species, rxn)
+mech = Mechanism(rxn)
 print(mech)
 
 cv = DCVoltammetry(E_start = 0.5, E_rev=-0.5, nu=1.0e0)
@@ -90,7 +91,7 @@ This will plot the following:
 
 ## Notebooks
 This repository is shipped few useful [notebooks](https://github.com/kiranvad/pyMECSim/tree/master/notebooks).
-* [Cyclic Voltammetry Simulation Example for Single Electron Transfer Mechanism](https://github.com/kiranvad/pyMECSim/blob/master/notebooks/Cyclic%20Voltammetry%20Simulation%20Example%20for%20Single%20Electron%20Transfer%20Mechanism.ipynb) -- that examplains all the possible use case of the simulator on a simple one electron transfer mehcanism
+* [Cyclic Voltammetry Simulation Example for Single Electron Transfer Mechanism](https://github.com/kiranvad/pyMECSim/blob/master/notebooks/Basic%20Usage.ipynb) -- that exaplains all the possible use cases of the simulator on a simple one electron transfer mehcanism
 * [Kinetic Zone Diagram](/notebooks/Kinetic%20Zone%20Diagram.ipynb) -- exmaple explaining how to generate various CV curves in the [kinetic zone diagram](https://www.nature.com/articles/s41570-017-0039/figures/2)
 
 
