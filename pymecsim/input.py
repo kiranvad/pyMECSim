@@ -100,6 +100,7 @@ class Reaction:
         self.products = products
         self.reactants_dict = self._to_dict(self.reactants)
         self.products_dict = self._to_dict(self.products)
+        self._check_surface_reaction()
         self.num_species = len(self.reactants_dict) + len(self.products_dict)
     
     def __repr__(self):
@@ -129,6 +130,7 @@ class Reaction:
         
         return reaction
     
+
     def _to_dict(self, x):
         d = {}
         for specie, coeff in x:
@@ -138,7 +140,26 @@ class Reaction:
                 d[specie.name] = coeff
             
         return d
-     
+    
+    def _check_surface_reaction(self):
+        
+        surface_reactants = 0
+        for (r,_) in self.reactants:
+            if r!='e':
+                if r._specie_type==1:
+                    surface_reactants += 1
+                
+        surface_products = 0
+        for (p,_) in self.products:
+            if p._specie_type==1:
+                surface_products += 1
+        if surface_reactants!=surface_products:
+            message = 'Number of surface confined species on both sides of'\
+            'the reactions needs to be same for \n' 
+            message += self._get_formula()
+            message += '\nGiven {} as reactants, {} as products'.format(surface_reactants, surface_products)
+
+            raise Exception(message) 
                
     
 class ChargeTransfer(Reaction):
@@ -152,7 +173,7 @@ class ChargeTransfer(Reaction):
     >>> print(R1) 
     Charge Transfer : 1 A + 2 e <=> 1 B  ks= 1.00E+04, E0 = 0.00E+00, alpha = 0.50
     """
-    def __init__(self, reactants, products, E0, ks=1e4, alpha=0.5):
+    def __init__(self, reactants, products, E0=0.0, ks=1e4, alpha=0.5):
         self.ks = ks
         if isinstance(self.ks, float):
             if self.ks>1e14:
@@ -257,7 +278,6 @@ class Mechanism:
     def __init__(self, reactions):
         self.reactions = reactions
         self.species = self._get_species_from_reactions()
-        self._check_surface_reaction()
             
         self.num_species = len(self.species)
         self.specie_list = [s.name for s in self.species]   
@@ -333,27 +353,7 @@ class Mechanism:
         species_in_reactions.remove('e')
         if not species_names==species_in_reactions:
             raise Exception('species in reactions and the list of Species provided did not match')
-     
-    def _check_surface_reaction(self):
-        
-        for rxn in self.reactions:
-            nr = 0
-            for r in rxn.reactants:
-                for s in self.species:
-                    if r==s.name and s._specie_type==1:
-                        nr += 1
-            np = 0
-            for p in rxn.products:
-                for s in self.species:
-                    if p==s.name and s._specie_type==1:
-                        np += 1
-            if np!=nr:
-                message = 'Number of surface confined species on both sides of \
-                the reactions needs to be same for ' 
-                message += rxn._get_formula()
-                
-                raise Exception(message)
-                
+         
     def _get_species_from_reactions(self):
         solution_species = []
         surface_species = []

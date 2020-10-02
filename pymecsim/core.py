@@ -40,6 +40,7 @@ class MECSIM:
         self.dirname = os.path.dirname(__file__)
         self.exp = exp
         self.configfile = configfile
+        self.outfile = None
 
         if self.configfile is None:
             inpfile = exp.get_inpfile_lines()
@@ -84,8 +85,10 @@ class MECSIM:
             self.tvc_file = list(open(_file, 'r'))
         
         return self.T, self.V , self.I
-        
+    
     def _get_errors(self):
+        if self.outfile is None:
+            raise RuntimeError('Simulation exited without any errors. Please look at log.txt file')
         for line in reversed(self.logs):
             if "Error" in line:
                 error = line.replace('Error: ','')
@@ -248,6 +251,41 @@ class MECSIM:
         """
         value = '{:.2E}'.format(value).replace('E','e')
         pysed(string,value, self.configfile, self.configfile)
+        
+        
+    def plot_concentrations(self, **kwargs):
+        """Utility function to plot concentrations
+        
+        You can pass any kwargs of the class `matplotlib.pyplot.subplots`
+        Returns axis for two subplots [0] Bulk concentrations, [1] Sufface concentrations
+        """
+        
+        species = self.exp.mechanism.species
+        C_bulk = self.get_bulk_concentrations()
+
+        fig, axs = plt.subplots(1,2, **kwargs)
+        fig.subplots_adjust(wspace=0.3)
+
+        for s in species:
+            axs[0].plot(C_bulk['x'], C_bulk[s.name], label=s.name)
+            
+        axs[0].set_xlabel('Normalized length')
+        axs[0].set_ylabel('Normalized concentration')
+        axs[0].legend()
+        axs[0].set_title(r'Species concentration in the bulk (Final t=$\infty$)')
+
+        C_surface = self.get_surface_concentrations()
+        time = C_surface['T']
+
+        for s in species:
+            axs[1].plot(time, C_surface[s.name], label=s.name)
+
+        axs[1].set_xlabel('time (s)')
+        axs[1].set_ylabel('Normalized concentration')
+        axs[1].legend()
+        axs[1].set_title('Species concentration at the surface')
+        
+        return axs
         
         
         
