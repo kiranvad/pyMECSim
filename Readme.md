@@ -93,7 +93,7 @@ This will plot the following:
 This repository is shipped few useful [notebooks](https://github.com/kiranvad/pyMECSim/tree/master/notebooks).
 * [Cyclic Voltammetry Simulation Example for Single Electron Transfer Mechanism](https://github.com/kiranvad/pyMECSim/blob/master/notebooks/Basic%20Usage.ipynb) -- that exaplains all the possible use cases of the simulator on a simple one electron transfer mehcanism
 * [Kinetic Zone Diagram](/notebooks/Kinetic%20Zone%20Diagram.ipynb) -- exmaple explaining how to generate various CV curves in the [kinetic zone diagram](https://www.nature.com/articles/s41570-017-0039/figures/2)
-
+* [Langmuir isotherm](/notebooks/Langmuir%20Isotherm.ipynb)-- example with modelling surface reactions and reproducing the Langmuir isotherm assumption
 
 ## Notes
 * Please free to contribute to this repository both interms of code and documetation or simple example use cases in jupyter notebook. 
