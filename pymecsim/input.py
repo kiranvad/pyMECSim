@@ -7,10 +7,12 @@ Version 2 :
 
 """
 
-
 import pdb
 import warnings
 import itertools
+from shutil import copy
+import os
+import numpy as np
 
 from .utils import deprecated
 
@@ -36,7 +38,8 @@ class Specie:
     
     def __init__(self, name,D=1e-5,C0 = 0.0, surface_confined=False):
         self.name = name
-        self._set_specie_type(surface_confined)
+        self.surface_confined = surface_confined
+        self._set_specie_type()
         self.diffusion(D)
         self.concentration(C0)
         
@@ -51,8 +54,8 @@ class Specie:
         else:
             self.C_units = 'mol/cm3'
             
-    def _set_specie_type(self, surface_confined):
-        if surface_confined:
+    def _set_specie_type(self):
+        if self.surface_confined:
             self.specie_type = 'Surface confined'
             self._specie_type = 1
         else:
@@ -60,8 +63,9 @@ class Specie:
             self._specie_type = 0
     
     def __repr__(self):
-        line = '{} specie {} with Diffusion coefficent {:.2E} {} , intial concentration {:.2E} {}'
-        return line.format(self.specie_type, self.name, self.D, self.D_units, self.C0, self.C_units)
+        line = '{} specie {} with Diffusion coefficent {} {} , intial concentration {} {}'
+        return line.format(self.specie_type, self.name, 
+                           process_parameter(self.D), self.D_units, process_parameter(self.C0), self.C_units)
         
     def get_input(self):
         _D = process_parameter(self.D)    
@@ -100,6 +104,7 @@ class Reaction:
         self.products = products
         self.reactants_dict = self._to_dict(self.reactants)
         self.products_dict = self._to_dict(self.products)
+        self._check_surface_reaction()
         self.num_species = len(self.reactants_dict) + len(self.products_dict)
     
     def __repr__(self):
@@ -129,6 +134,7 @@ class Reaction:
         
         return reaction
     
+
     def _to_dict(self, x):
         d = {}
         for specie, coeff in x:
@@ -138,7 +144,26 @@ class Reaction:
                 d[specie.name] = coeff
             
         return d
-     
+    
+    def _check_surface_reaction(self):
+        
+        surface_reactants = 0
+        for (r,_) in self.reactants:
+            if r!='e':
+                if r._specie_type==1:
+                    surface_reactants += 1
+                
+        surface_products = 0
+        for (p,_) in self.products:
+            if p._specie_type==1:
+                surface_products += 1
+        if surface_reactants!=surface_products:
+            message = 'Number of surface confined species on both sides of'\
+            'the reactions needs to be same for \n' 
+            message += self._get_formula()
+            message += '\nGiven {} as reactants, {} as products'.format(surface_reactants, surface_products)
+
+            raise Exception(message) 
                
     
 class ChargeTransfer(Reaction):
@@ -152,7 +177,7 @@ class ChargeTransfer(Reaction):
     >>> print(R1) 
     Charge Transfer : 1 A + 2 e <=> 1 B  ks= 1.00E+04, E0 = 0.00E+00, alpha = 0.50
     """
-    def __init__(self, reactants, products, E0, ks=1e4, alpha=0.5):
+    def __init__(self, reactants, products, E0=0.0, ks=1e4, alpha=0.5):
         self.ks = ks
         if isinstance(self.ks, float):
             if self.ks>1e14:
@@ -256,24 +281,30 @@ class Mechanism:
     """
     def __init__(self, reactions):
         self.reactions = reactions
-        self.species = self._get_species_from_reactions()
-        self._check_surface_reaction()
-            
+        self.species = self._get_species_from_reactions()    
         self.num_species = len(self.species)
-        self.specie_list = [s.name for s in self.species]   
         self.input = self.get_input()
 
-    def get_reaction_dict(self):
+    def _get_reaction_dict(self):
+        """ Creates a dummy dictornay with species names as keys
+        
+        makes sure that species are labelled in the same order in reactions and 
+        species parts of  input to MECSim
+        
+        """
         reaction_input_dict = {}
-        for s in self.specie_list:
-            reaction_input_dict[s]=0
+        for s in self.species:
+            reaction_input_dict[s.name]=0
         
         return reaction_input_dict
         
     def process_reaction(self, reaction):
+        """Main function to process the reaction into a MECSim readable reaction line
+        
+        """
         if reaction.mode[1]==0:
             line = '{}, '.format(process_parameter(reaction.mode[1]))
-            reaction_input_dict = self.get_reaction_dict()
+            reaction_input_dict = self._get_reaction_dict()
             for key, coeff in reaction.reactants_dict.items():
                 reaction_input_dict[key]= '-{}'.format(process_parameter(coeff))
             for key, coeff in reaction.products_dict.items():
@@ -290,7 +321,7 @@ class Mechanism:
         
         else:
             line = '{}, '.format(process_parameter(reaction.mode[1]))
-            reaction_input_dict = self.get_reaction_dict()
+            reaction_input_dict = self._get_reaction_dict()
             for key, coeff in reaction.reactants_dict.items():
                 reaction_input_dict[key]= '-{}'.format(process_parameter(coeff))
             for key, coeff in reaction.products_dict.items():
@@ -333,27 +364,7 @@ class Mechanism:
         species_in_reactions.remove('e')
         if not species_names==species_in_reactions:
             raise Exception('species in reactions and the list of Species provided did not match')
-     
-    def _check_surface_reaction(self):
-        
-        for rxn in self.reactions:
-            nr = 0
-            for r in rxn.reactants:
-                for s in self.species:
-                    if r==s.name and s._specie_type==1:
-                        nr += 1
-            np = 0
-            for p in rxn.products:
-                for s in self.species:
-                    if p==s.name and s._specie_type==1:
-                        np += 1
-            if np!=nr:
-                message = 'Number of surface confined species on both sides of \
-                the reactions needs to be same for ' 
-                message += rxn._get_formula()
-                
-                raise Exception(message)
-                
+         
     def _get_species_from_reactions(self):
         solution_species = []
         surface_species = []
@@ -361,10 +372,10 @@ class Mechanism:
             for side in [reaction.reactants, reaction.products]:
                 for specie,_ in side:
                     if not specie=='e':
-                        if specie._specie_type==0:
+                        if not specie.surface_confined:
                             if specie not in solution_species:
                                 solution_species.append(specie)
-                        elif specie._specie_type==1:
+                        else:
                             if specie not in surface_species:
                                 surface_species.append(specie)
                         
@@ -373,9 +384,6 @@ class Mechanism:
         return species
             
         
-from shutil import copy
-import os
-
 class Voltammetry:
     """
     Usage:
@@ -393,7 +401,7 @@ class Voltammetry:
     (This function has not been tested)
     
     """
-    def __init__(self, objs=None, N=12):
+    def __init__(self, objs=[], N=12):
         """
         N : Number of spatial points as a power of two
         """
@@ -402,6 +410,7 @@ class Voltammetry:
         self.objs = objs
         self.ramp = 0
         self._check_objs()
+        self._check_errors()
 
     def from_file(self):
         dirname = os.path.dirname(__file__)
@@ -446,7 +455,7 @@ class Voltammetry:
     
     def _check_objs(self):
         self.obj_mode = []
-        if self.objs is None:
+        if len(self.objs)==0:
             msg = 'using the default DC Voltammetry loading: \n'
             msg += '{}'.format(self.dcvolt_params)
             warnings.warn(msg)
@@ -471,7 +480,16 @@ class Voltammetry:
                     
                 else:
                     raise KeyError('Did not understand type {}'.type(obj))
-                    
+    
+    def _check_errors(self):
+        # check if voltage sweep is None
+        E1 = self.dcvolt_params['E_start']
+        E2 = self.dcvolt_params['E_rev']
+        if np.isclose(E1, E2):
+            raise RuntimeError('Voltage sweep has identical start and reverse voltages.')
+     
+    
+    
 class DCVoltammetry:
     """
     Usage:

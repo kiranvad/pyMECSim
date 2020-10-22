@@ -8,10 +8,7 @@ dirname = os.path.dirname(__file__)
 from shutil import copyfile
 import warnings
 
-import seaborn as sns
 import matplotlib.pyplot as plt
-from matplotlib import rc
-rc('text', usetex=True)
 
 from .utils import pysed
 
@@ -40,6 +37,7 @@ class MECSIM:
         self.dirname = os.path.dirname(__file__)
         self.exp = exp
         self.configfile = configfile
+        self.outfile = None
 
         if self.configfile is None:
             inpfile = exp.get_inpfile_lines()
@@ -51,7 +49,8 @@ class MECSIM:
             self.configfile = configfile
         else:
             raise RuntimeError('At least one input required. Use either a pymecsim exp class or a MECSIM .inp file')
-            
+        
+
     def solve(self):
         main_configfile = os.path.join(self.dirname, 'Master.inp')
         copyfile(self.configfile, main_configfile)
@@ -76,30 +75,46 @@ class MECSIM:
         self._get_errors()
         self.T,self.V,self.I = self._read_mecsim_out(self._get_filename('./'+self.outfile))  
         
-        return self.T, self.V , self.I
+        if self.flag_concs:
+            _file = self._get_filename('EC_Model.fin')
+            self.fin_file = list(open(_file, 'r'))
+            _file = self._get_filename('EC_Model.tvc')
+            self.tvc_file = list(open(_file, 'r'))
         
+        return self.T, self.V , self.I
+    
     def _get_errors(self):
+        
+        converged = False
+        # try if MECSim has thrown any fortran errors
+        if not len(self.stderr)==0:
+            raise RuntimeError('Unknown error but could be that some ' 
+                                   'of the simulation parameters are not properly set')
+
+        
+        # try to get meaninful errors from log.txt
+        errors = []
         for line in reversed(self.logs):
             if "Error" in line:
-                error = line.replace('Error: ','')
-                break
-
-        if not len(self.stderr)==0:
-            raise RuntimeError('MECSIM threw the following error that pyMECSIM could not understand \n'+
-                               self.stderr.decode("utf-8"))
-
-        if self.stderr.decode("utf-8") == 'STOP 4\n':
-            raise RuntimeError('pyMECSIM could not understand the error message from MECSIM.')
-
-        if len(self.logs)<30:
-            if 'error' in locals():
+                errors.append(line.replace('Error: ',''))
+            if "unphysical" in line:
+                errors.append('Simulation diverged: '+ line.strip('with \n'))
+            if "Done 100%" in line:
+                converged = True
+                
+        error = '\n'.join(e for e in errors)        
+        if not converged:
+            warnings.warn('Simulation diverged\nLook at log.txt file in the working directory')
+            if len(errors)>0:
                 raise RuntimeError(error)
             else:
                 raise RuntimeError('Could not identify a clear error from MECSIM but here is what is avaiable: \n'
                                    + logs[-1])
-        else:
-            if 'error' in locals():
-                warnings.warn(error)
+
+        
+        # if nothing from log files makes sense:
+        if self.outfile is None:
+            raise RuntimeError('Simulation exited without any errors. Please look at log.txt file')
                 
     def get_current_profile(self):
         """ return current values over simulated time scale """
@@ -145,20 +160,20 @@ class MECSIM:
         if not self.flag_concs:
             raise Exception('MECSIM did not output any concentration profiles.'+
                            'Did you specifiy in the configuration file to output the concentration profiles?')
-        
-        fin_file = self._get_filename('EC_Model.fin')
-        f = open(fin_file, 'r')
+            
+        if len(self.fin_file)==0:
+            warnings.warn('No bulk concentration profiles found')
+            
         concs = []
-        for i, line in enumerate(f):
+        for i, line in enumerate(self.fin_file):
             columns = line.split()
             concs.append(columns)
         concs = np.asarray(concs) 
         concs = self._get_float_matrix(concs)
-        
         out = {}
-        out['x'] = concs[:,0]
+        out['x'] = concs[1:,0]
         for i,s in enumerate(self.exp.mechanism.species):
-            out[s.name] = concs[:,i+1]
+            out[s.name] = concs[1:,i+1]
             
         return out
     
@@ -167,23 +182,36 @@ class MECSIM:
         returns surface concentrations profiles over time C(x=0,t).
         
         output is dictonaty with keys as species names. Access the time array over t using key 'T'
+        
+        Notes:
+        ------
+                EC_Model.tvc is structured such that first line is number of species
+                next few lines can be trerated as a table with columns ordered as time, voltage,unkown, concentrations
         """
         if not self.flag_concs:
             raise Exception('MECSIM did not output any concentration profiles.'+
                        'Did you specifiy in the configuration file to output the concentration profiles?')
-        tcv_file = self._get_filename('EC_Model.tvc')    
-        f = open(tcv_file, 'r')
-        concs = []
-        for i, line in enumerate(f):
+        
+        if len(self.tvc_file)==0:
+            warnings.warn('No surface concentration profiles found')
+        
+        table = []
+        for i, line in enumerate(self.tvc_file):
             if i>0:
                 columns = line.split()
-                concs.append(columns[3:])
-        concs = np.asarray(concs) 
-        concs = self._get_float_matrix(concs)   
+                table.append(columns)
+        table = np.asarray(table) 
+        table = self._get_float_matrix(table)
+        
+        # only collect rows with a positive time stamp
+        positive_time = table[:,0]>0
+        table = table[positive_time,:]
+        
         out = {}
-        out['T'] = self.T
+        out['T'] = table[:,0]
+        concs = table[:,3:]
         for i, s in enumerate(self.exp.mechanism.species):
-            out[s.name] = concs[1:,i]
+            out[s.name] = concs[:,i]
             
         return out
     
@@ -198,7 +226,6 @@ class MECSIM:
         ax.set_ylabel('Current(A)')
 
         plt.tight_layout()
-        sns.despine()
 
         return ax
     
@@ -234,6 +261,41 @@ class MECSIM:
         """
         value = '{:.2E}'.format(value).replace('E','e')
         pysed(string,value, self.configfile, self.configfile)
+        
+        
+    def plot_concentrations(self, **kwargs):
+        """Utility function to plot concentrations
+        
+        You can pass any kwargs of the class `matplotlib.pyplot.subplots`
+        Returns axis for two subplots [0] Bulk concentrations, [1] Sufface concentrations
+        """
+        
+        species = self.exp.mechanism.species
+        C_bulk = self.get_bulk_concentrations()
+
+        fig, axs = plt.subplots(1,2, **kwargs)
+        fig.subplots_adjust(wspace=0.3)
+
+        for s in species:
+            axs[0].plot(C_bulk['x'], C_bulk[s.name], label=s.name)
+            
+        axs[0].set_xlabel('Normalized length')
+        axs[0].set_ylabel('Normalized concentration')
+        axs[0].legend()
+        axs[0].set_title(r'Species concentration in the bulk (Final t=$\infty$)')
+
+        C_surface = self.get_surface_concentrations()
+        time = C_surface['T']
+
+        for s in species:
+            axs[1].plot(time, C_surface[s.name], label=s.name)
+
+        axs[1].set_xlabel('time (s)')
+        axs[1].set_ylabel('Normalized concentration')
+        axs[1].legend()
+        axs[1].set_title('Species concentration at the surface')
+        
+        return axs
         
         
         
