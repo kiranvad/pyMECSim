@@ -100,8 +100,11 @@ class Reaction:
         _get_formula : produces the reaction as a formula and returns string
         _to_dict : converts the reactants/products from tuple to dict 
         """
+        self._check_all_species(reactants)
         self.reactants = reactants
+        self._check_all_species(products)
         self.products = products
+        
         self.reactants_dict = self._to_dict(self.reactants)
         self.products_dict = self._to_dict(self.products)
         self._check_surface_reaction()
@@ -164,7 +167,17 @@ class Reaction:
             message += '\nGiven {} as reactants, {} as products'.format(surface_reactants, surface_products)
 
             raise Exception(message) 
-               
+    
+    def _check_all_species(self, specielist):
+        from pymecsim import Specie
+        
+        for i,_ in specielist:
+            if isinstance(i, str) and i=='e':
+                continue
+            elif isinstance(i, Specie):
+                continue
+            else:
+                raise RuntimeError('Species {} is not recognized `pymecsim::Specie`')
     
 class ChargeTransfer(Reaction):
     """
