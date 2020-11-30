@@ -17,11 +17,11 @@ If you use this software in your work please cite the original MECSim software a
 ```
 To install as a package, run
 ```bash
-pip install git+https://github.com/kiranvad/pyMECSim#egg=pyMECSIM.` 
+pip install pymecsim==1.0
 ```
 Dependencies will be checked and installed from the setup.py file.
 
-To install the package locally:
+To install the package locally in developer mode:
 ```bash
 git clone https://github.com/kiranvad/pyMECSim.git
 cd pyMECSim
