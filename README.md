@@ -15,7 +15,7 @@ If you use this software in your work please cite the original MECSim software a
     url          = {https://github.com/kiranvad/pyMECSim}
     }
 ```
-To install as a package, run
+To install as a package, run (THIS CURRENTLY DOESN'T WORK)
 ```bash
 pip install pymecsim==1.0
 ```
