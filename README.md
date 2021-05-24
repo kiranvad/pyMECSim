@@ -54,6 +54,7 @@ volt = Voltammetry(objs=[cv])
 exp = Experiment(mech, voltammetry=volt)
 
 sim = MECSIM(exp=exp)
+sim.solve()
 sim.plot() # plot the simulated CV curve
 ```
 
